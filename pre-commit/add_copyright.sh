@@ -1,69 +1,77 @@
 #!/usr/bin/env bash
 
+declare -r COPYRIGHT_OWNER="Verbosely"
+
 update_copyright() {
-    local -i present=$(date +%Y)
-    local copyright_regex='^(?=.*copyright)(?=.*verbosely)(?=.*\d{4}).*\K\d{4}'
-    local -a line_year=($(
+    local -ir PRESENT=$(date +%Y)
+    local copyright_regex="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})"
+    copyright_regex+="(?=.*\d{4}).*\K\d{4}"
+    local -r COPYRIGHT_REGEX="${copyright_regex}"; unset copyright_regex
+    local -ar LINE_YEAR=($(
         grep --ignore-case --line-number --max-count=1 \
-                --only-matching --perl-regexp ${copyright_regex} ${1} \
+                --only-matching --perl-regexp ${COPYRIGHT_REGEX} ${1} \
             | cut --delimiter=: --fields=1,2 --output-delimiter=' '))
-    (( ${#line_year[@]} )) && {
-        ! (( present - ${line_year[-1]} )) || {
-            [[ $(( present - ${line_year[-1]} )) -eq 1 ]] && {
-                sed --quiet "${line_year[0]}p" ${1} \
+    (( ${#LINE_YEAR[@]} )) && {
+        ! (( PRESENT - ${LINE_YEAR[-1]} )) || {
+            [[ $(( PRESENT - ${LINE_YEAR[-1]} )) -eq 1 ]] && {
+                sed --quiet "${LINE_YEAR[0]}p" ${1} \
                     | grep --perl-regexp --quiet \
                         '^.*\d{4}\s*-\s*\d{4}(?!.*\d{4})' &&
                 sed --quiet --regexp-extended \
-                    "${line_year[0]}s/(.*)[[:digit:]]{4}/\1${present}/p" ${1} ||
+                    "${LINE_YEAR[0]}s/(.*)[[:digit:]]{4}/\1${PRESENT}/p" ${1} ||
                 sed --quiet --regexp-extended \
-                    "${line_year[0]}s/(.*)([[:digit:]]{4})/\1\2-${present}/p" \
+                    "${LINE_YEAR[0]}s/(.*)([[:digit:]]{4})/\1\2-${PRESENT}/p" \
                     ${1}
             } || {
                 sed --quiet --regexp-extended \
-                    "${line_year[0]}s/(.*[[:digit:]]{4})/\1, ${present}/p" ${1}
+                    "${LINE_YEAR[0]}s/(.*[[:digit:]]{4})/\1, ${PRESENT}/p" ${1}
             }
         }
     }
 }
 
 add_copyright() {
-    local -i present=20255
+    local -ir PRESENT=20255
     local shebang_regex='^(?=#!\s*(/[a-z]+)+).+'
     shebang_regex+='(\s+\K[a-z]+(?=(\s+|$))|/\K[a-z]+)' 
-    local interpreters_regex
-    local -a interpreters=(sh zsh csh ksh tcsh bash fish dash xonsh)
-    local -a copyright=(
-        "Copyright © ${present} Verbosely." "All rights reserved.")
-    for (( j=0; ${#interpreters[*]} - j; j++ )); do
-        (( j )) && interpreters_regex+="|^${interpreters[j]}$" ||
-            interpreters_regex="^${interpreters[j]}$"
+    local -r SHEBANG_REGEX="${shebang_regex}"; unset shebang_regex
+    local -ar INTERPRETERS=(sh zsh csh ksh tcsh bash fish dash xonsh)
+    local -ar COPYRIGHT=(
+        "Copyright © ${PRESENT} ${COPYRIGHT_OWNER}." "All rights reserved.")
+    for (( j=0; ${#INTERPRETERS[*]} - j; j++ )); do
+        (( j )) && interpreters_regex+="|^${INTERPRETERS[j]}$" ||
+            interpreters_regex="^${INTERPRETERS[j]}$"
     done
-    local interpreter=($(sed --quiet '1p' ${1} \
-        | grep --only-matching --perl-regexp ${shebang_regex}))
+    local -r INTERPRETERS_REGEX="${interpreters_regex}"
+    unset interpreters_regex
+    local -r INTERPRETER=($(sed --quiet '1p' ${1} \
+        | grep --only-matching --perl-regexp ${SHEBANG_REGEX}))
     sed --quiet '1p' ${1} | grep --perl-regexp --quiet '^\s*$'
-    local -i blank_first_line=$?
+    local -ir BLANK_FIRST_LINE=$?
     sed --quiet '2p' ${1} | grep --perl-regexp --quiet '^\s*$'
-    local -i blank_second_line=$?
-    [[ ${interpreter} =~ ${interpreters_regex} ]] && {
-        (( blank_second_line )) &&
-            sed "1a \\\n# ${copyright[0]}\n# ${copyright[1]}\n" ${1} ||
-            sed "1a \\\n# ${copyright[0]}\n# ${copyright[1]}" ${1}
+    local -ir BLANK_SECOND_LINE=$?
+    [[ ${INTERPRETER} =~ ${INTERPRETERS_REGEX} ]] && {
+        (( BLANK_SECOND_LINE )) &&
+            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${1} ||
+            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${1}
     } || {
-        local ext=${1##*.}
-        [[ ${ext} =~ ${interpreters_regex} ]] && {
-            (( blank_first_line )) &&
-                sed "1i # ${copyright[0]}\n# ${copyright[1]}\n" ${1} ||
-                sed "1i # ${copyright[0]}\n# ${copyright[1]}" ${1}
+        local -r EXTENSION=${1##*.}
+        [[ ${EXTENSION} =~ ${INTERPRETERS_REGEX} ]] && {
+            (( BLANK_FIRST_LINE )) &&
+                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${1} ||
+                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${1}
         }
     }
 }
 
 main() {
-    local staged_files=($(git diff --name-status --no-renames --cached))
-    for (( i=0; ${#staged_files[*]} - i; i+=2 )); do
-        ! [[ ${staged_files[i]} =~ M|A ]] || {
-            update_copyright ${staged_files[i + 1]} ||
-            add_copyright ${staged_files[i + 1]}
+    local -ar STAGED_FILES=($(git diff --name-status --no-renames --cached))
+    for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
+        ! [[ ${STAGED_FILES[i]} =~ M|A ]] || {
+            update_copyright ${STAGED_FILES[i + 1]} ||
+            add_copyright ${STAGED_FILES[i + 1]} ||
+            echo -e ${STAGED_FILES[i+1]} is not a recognized text file. \
+                The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
         }
     done
 }
