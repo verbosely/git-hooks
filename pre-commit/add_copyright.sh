@@ -16,6 +16,11 @@ define_constants() {
     declare -gr INTERPRETERS_REGEX="${temp}"
 }
 
+is_not_text_file() {
+    ! file $1 | grep --perl-regexp --quiet '\s+text\s+' &&
+        echo "$1 isn't a readable text file. Skipping."
+}
+
 update_copyright() {
     local -ar LINE_YEAR=($(
         grep --ignore-case --line-number --max-count=1 \
@@ -90,12 +95,16 @@ main() {
     define_constants
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         [[ ${STAGED_FILES[i]} =~ R ]] && {
-            update_copyright ${STAGED_FILES[i + 2]} ||
-            add_copyright ${STAGED_FILES[i + 1]} ${STAGED_FILES[i + 2]}
+            is_not_text_file ${STAGED_FILES[i + 2]} || {
+                update_copyright ${STAGED_FILES[i + 2]} ||
+                add_copyright ${STAGED_FILES[i + 1]} ${STAGED_FILES[i + 2]}
+            }
             i+=1
         } || {
-            update_copyright ${STAGED_FILES[i + 1]} ||
-            add_copyright ${STAGED_FILES[i + 1]}
+            is_not_text_file ${STAGED_FILES[i + 1]} || {
+                update_copyright ${STAGED_FILES[i + 1]} ||
+                add_copyright ${STAGED_FILES[i + 1]}
+            }
         }
     done
 }
