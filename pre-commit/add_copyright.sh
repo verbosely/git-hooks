@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 
-declare -r COPYRIGHT_OWNER="Verbosely"
+define_constants() {
+    declare -gr COPYRIGHT_OWNER="Verbosely"
+    declare -agr STAGED_FILES=($(git diff --diff-filter="ARM" \
+        --name-status --cached))
+    declare -gir PRESENT=$(date +%Y)
+    local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
+    declare -gr COPYRIGHT_REGEX="${temp}"
+    temp='^(?=#!\s*(/[a-z]+)+).+(\s+\K[a-z]+(?=(\s+|$))|/\K[a-z]+)' 
+    declare -gr SHEBANG_REGEX="${temp}"
+    local -ar INTERPRETERS=(sh zsh csh ksh tcsh bash fish dash xonsh)
+    for (( j=0; ${#INTERPRETERS[*]} - j; j++ )); do
+        (( j )) && temp+="|^${INTERPRETERS[j]}$" || temp="^${INTERPRETERS[j]}$"
+    done
+    declare -gr INTERPRETERS_REGEX="${temp}"
+}
 
 update_copyright() {
-    local -ir PRESENT=$(date +%Y)
-    local copyright_regex="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})"
-    copyright_regex+="(?=.*\d{4}).*\K\d{4}"
-    local -r COPYRIGHT_REGEX="${copyright_regex}"; unset copyright_regex
     local -ar LINE_YEAR=($(
         grep --ignore-case --line-number --max-count=1 \
                 --only-matching --perl-regexp ${COPYRIGHT_REGEX} ${1} \
