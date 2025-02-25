@@ -40,48 +40,62 @@ update_copyright() {
     }
 }
 
-add_copyright() {
-    local -ir PRESENT=20255
-    local shebang_regex='^(?=#!\s*(/[a-z]+)+).+'
-    shebang_regex+='(\s+\K[a-z]+(?=(\s+|$))|/\K[a-z]+)' 
-    local -r SHEBANG_REGEX="${shebang_regex}"; unset shebang_regex
-    local -ar INTERPRETERS=(sh zsh csh ksh tcsh bash fish dash xonsh)
-    local -ar COPYRIGHT=(
-        "Copyright © ${PRESENT} ${COPYRIGHT_OWNER}." "All rights reserved.")
-    for (( j=0; ${#INTERPRETERS[*]} - j; j++ )); do
-        (( j )) && interpreters_regex+="|^${INTERPRETERS[j]}$" ||
-            interpreters_regex="^${INTERPRETERS[j]}$"
+years_to_string() {
+    local -i consecutive=1
+    local -i temp
+    for (( j=2; $# - j + 1; j++ )); do
+        temp=$(( j - 1 ))
+        [[ $(( ${!j} - ${!temp} )) -ne 1 ]] && {
+            consecutive=1
+            years_str+=", ${!j}"
+        } || {
+            (( consecutive )) && years_str+="-${!j}" ||
+                years_str="${years_str%-*}-${!j}"
+            consecutive=0
+        }
     done
-    local -r INTERPRETERS_REGEX="${interpreters_regex}"
-    unset interpreters_regex
-    local -r INTERPRETER=($(sed --quiet '1p' ${1} \
+}
+
+add_copyright() {
+    local -a all_unique_years=($(
+        git log --date=format:"%Y" --format=format:"%ad%n%cd" -- ${1} \
+            | cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
+    local years_str="${all_unique_years[0]}"
+    years_to_string ${all_unique_years[@]} ; unset all_unique_years
+    local -ar COPYRIGHT=(
+        "Copyright © ${years_str} ${COPYRIGHT_OWNER}." "All rights reserved.")
+    local -r INTERPRETER=($(sed --quiet '1p' ${!#} \
         | grep --only-matching --perl-regexp ${SHEBANG_REGEX}))
-    sed --quiet '1p' ${1} | grep --perl-regexp --quiet '^\s*$'
+    sed --quiet '1p' ${!#} | grep --perl-regexp --quiet '^\s*$'
     local -ir BLANK_FIRST_LINE=$?
-    sed --quiet '2p' ${1} | grep --perl-regexp --quiet '^\s*$'
+    sed --quiet '2p' ${!#} | grep --perl-regexp --quiet '^\s*$'
     local -ir BLANK_SECOND_LINE=$?
     [[ ${INTERPRETER} =~ ${INTERPRETERS_REGEX} ]] && {
         (( BLANK_SECOND_LINE )) &&
-            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${1} ||
-            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${1}
+            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${!#} ||
+            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${!#}
     } || {
-        local -r EXTENSION=${1##*.}
+        local -r EXTENSION=${!###*.}
         [[ ${EXTENSION} =~ ${INTERPRETERS_REGEX} ]] && {
             (( BLANK_FIRST_LINE )) &&
-                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${1} ||
-                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${1}
+                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${!#} ||
+                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${!#}
         }
-    }
+    } || echo -e ${!#} isn\'t a recognized text file. \
+        The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
+
 }
 
 main() {
-    local -ar STAGED_FILES=($(git diff --name-status --no-renames --cached))
+    define_constants
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
-        ! [[ ${STAGED_FILES[i]} =~ M|A ]] || {
+        [[ ${STAGED_FILES[i]} =~ R ]] && {
+            update_copyright ${STAGED_FILES[i + 2]} ||
+            add_copyright ${STAGED_FILES[i + 1]} ${STAGED_FILES[i + 2]}
+            i+=1
+        } || {
             update_copyright ${STAGED_FILES[i + 1]} ||
-            add_copyright ${STAGED_FILES[i + 1]} ||
-            echo -e ${STAGED_FILES[i+1]} is not a recognized text file. \
-                The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
+            add_copyright ${STAGED_FILES[i + 1]}
         }
     done
 }
