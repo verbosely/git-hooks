@@ -7,18 +7,30 @@ define_constants() {
     declare -gir PRESENT=$(date +%Y)
     local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
     declare -gr COPYRIGHT_REGEX="${temp}"
-    temp='^(?=#!\s*(/[a-z]+)+).+(\s+\K[a-z]+(?=(\s+|$))|/\K[a-z]+)' 
-    declare -gr SHEBANG_REGEX="${temp}"
-    local -ar INTERPRETERS=(sh zsh csh ksh tcsh bash fish dash xonsh)
-    for (( j=0; ${#INTERPRETERS[*]} - j; j++ )); do
-        (( j )) && temp+="|^${INTERPRETERS[j]}$" || temp="^${INTERPRETERS[j]}$"
-    done
-    declare -gr INTERPRETERS_REGEX="${temp}"
+    declare -gr SHEBANG_REGEX='^#!\s*(/(\w|\.)+)+'
+    declare -Agr LANGUAGE_COMMENT_MAP=(
+        ["sh"]="#"
+        ["zsh"]="#"
+        ["csh"]="#"
+        ["tcsh"]="#"
+        ["fish"]="#"
+        ["xonsh"]="#"
+        ["dash"]="#"
+        ["bash"]="#"
+        ["ksh"]="#"
+        ["python"]="#"
+        ["conf"]="#"
+        ["nginx"]="#"
+        ["ruby"]="#"
+        ["go"]="//"
+        ["javascript"]="//"
+        ["typescript"]="//"
+    )
 }
 
-is_not_text_file() {
-    ! file $1 | grep --perl-regexp --quiet '\s+text\s+' &&
-        echo "$1 isn't a readable text file. Skipping."
+is_not_text_type() {
+    ! [[ $(file --brief --mime-type $1) =~ text/ ]] &&
+        echo "$1 isn't a text MIME type. Skipping."
 }
 
 update_copyright() {
