@@ -74,48 +74,41 @@ years_to_string() {
 }
 
 add_copyright() {
+    local -r FILE_TYPE=$(
+        vim -es -c "filetype detect | set filetype? | quit" ${!#} \
+            | cut --delimiter== --fields=2)
+    [ "${FILE_TYPE}" ] || return
+    [ "${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]+key}" ] || return
     local -a all_unique_years=($(
-        git log --date=format:"%Y" --format=format:"%ad%n%cd" -- ${1} \
+        git log --date=format:"%Y" --format=format:"%ad%n%cd" -- "$@" \
             | cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
     local years_str="${all_unique_years[0]}"
     years_to_string ${all_unique_years[@]} ; unset all_unique_years
-    local -ar COPYRIGHT=(
-        "Copyright © ${years_str} ${COPYRIGHT_OWNER}." "All rights reserved.")
-    local -r INTERPRETER=($(sed --quiet '1p' ${!#} \
-        | grep --only-matching --perl-regexp ${SHEBANG_REGEX}))
-    sed --quiet '1p' ${!#} | grep --perl-regexp --quiet '^\s*$'
-    local -ir BLANK_FIRST_LINE=$?
-    sed --quiet '2p' ${!#} | grep --perl-regexp --quiet '^\s*$'
-    local -ir BLANK_SECOND_LINE=$?
-    [[ ${INTERPRETER} =~ ${INTERPRETERS_REGEX} ]] && {
-        (( BLANK_SECOND_LINE )) &&
-            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${!#} ||
-            sed "1a \\\n# ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${!#}
+    local line1="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} Copyright © "
+    line1+="${years_str} ${COPYRIGHT_OWNER}."
+    local line2="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} All rights reserved."
+    local -ar COPYRIGHT=("${line1}" "${line2}") ; unset line1 line2
+    sed --quiet '1p' ${!#} | grep --perl-regexp --quiet "${SHEBANG_REGEX}" && {
+        sed --quiet '2p' ${!#} | grep --perl-regexp --quiet '^\s*$' &&
+            sed "1a \\\n${COPYRIGHT[0]}\n${COPYRIGHT[1]}" ${!#} ||
+            sed "1a \\\n${COPYRIGHT[0]}\n${COPYRIGHT[1]}\n" ${!#}
     } || {
-        local -r EXTENSION=${!###*.}
-        [[ ${EXTENSION} =~ ${INTERPRETERS_REGEX} ]] && {
-            (( BLANK_FIRST_LINE )) &&
-                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}\n" ${!#} ||
-                sed "1i # ${COPYRIGHT[0]}\n# ${COPYRIGHT[1]}" ${!#}
-        }
-    } || echo -e ${!#} isn\'t a recognized text file. \
-        The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
-
+        sed --quiet '1p' ${!#} | grep --perl-regexp --quiet '^\s*$' &&
+            sed "1i ${COPYRIGHT[0]}\n${COPYRIGHT[1]}" ${!#} ||
+            sed "1i ${COPYRIGHT[0]}\n${COPYRIGHT[1]}\n" ${!#}
+    }
 }
 
 main() {
     define_constants
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
-        [[ ${STAGED_FILES[i]} =~ R ]] && {
-            is_not_text_file ${STAGED_FILES[i + 2]} || {
-                update_copyright ${STAGED_FILES[i + 2]} ||
-                add_copyright ${STAGED_FILES[i + 1]} ${STAGED_FILES[i + 2]}
-            }
-            i+=1
-        } || {
-            is_not_text_file ${STAGED_FILES[i + 1]} || {
-                update_copyright ${STAGED_FILES[i + 1]} ||
-                add_copyright ${STAGED_FILES[i + 1]}
+        ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
+            [[ ${STAGED_FILES[i]} =~ R ]] && i+=1
+            is_not_text_type ${STAGED_FILES[@]:i+1:1} || {
+                update_copyright ${STAGED_FILES[@]:i+1:1} ||
+                add_copyright ${STAGED_FILES[@]:i:2} ||
+                echo -e ${STAGED_FILES[i + 1]} isn\'t a recognized text file. \
+                    The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
             }
         }
     done
