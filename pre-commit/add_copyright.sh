@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+needed_binaries() {
+    echo "file git grep sed vim"
+}
+
 define_constants() {
     declare -gr COPYRIGHT_OWNER="Verbosely"
     declare -agr STAGED_FILES=($(git diff --diff-filter="ARM" \
@@ -100,6 +104,7 @@ add_copyright() {
 }
 
 main() {
+    . ../shared/checks.sh; check_binaries $(needed_binaries)
     define_constants
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
