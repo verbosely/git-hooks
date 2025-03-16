@@ -12,6 +12,8 @@ define_constants() {
     local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
     declare -gr COPYRIGHT_REGEX="${temp}"
     declare -gr SHEBANG_REGEX='^#!\s*(/(\w|\.)+)+'
+    temp='@@ -[[:digit:]],[[:digit:]] +[[:digit:]],[[:digit:]] @@'
+    declare -gr HUNK_HEADER_REGEX="${temp}"
     declare -Agr LANGUAGE_COMMENT_MAP=(
         ["sh"]="#"
         ["zsh"]="#"
@@ -110,6 +112,22 @@ add_copyright() {
     }
 }
 
+stage_changes() {
+    local hunk
+    local -i new_count
+    for file in ${updated[@]} ${added[@]}; do
+        hunk=$(git diff ${file} \
+            | sed --quiet "/${HUNK_HEADER_REGEX}/{
+                h ; :a ; n ; /${HUNK_HEADER_REGEX}/{
+                    x ; /copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}/I{
+                        p ; q} ; g ; ba} ; H ; \${
+                    x ; /copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}/I{
+                        p ; q}} ; ba}")
+        new_count=$(echo -e "${hunk}" \
+            | sed --quiet --regexp-extended '1s/.+,([[:digit:]]+).+/\1/p')
+    done
+}
+
 print_results() {
     local msg
     ! (( ${#non_text[*]} )) || {
@@ -135,7 +153,8 @@ print_results() {
 main() {
     . shared/checks.sh; check_binaries $(needed_binaries)
     define_constants
-    local -a non_text=() unrecognized_text=() updated=() added=()
+    local -a non_text=() unrecognized_text=() updated=() added=() staged=()
+    local -a unstaged=()
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
             [[ ${STAGED_FILES[i]} =~ R ]] && i+=1
@@ -145,6 +164,7 @@ main() {
             }
         }
     done
+    stage_changes
     print_results
 }
 main
