@@ -110,19 +110,41 @@ add_copyright() {
     }
 }
 
+print_results() {
+    local msg
+    ! (( ${#non_text[*]} )) || {
+        msg="The following files aren't of text MIME type "
+        msg+="and were thus skipped:\n"
+        print_message 0 "yellow" "${msg}${non_text[*]}"
+    }
+    ! (( ${#unrecognized_text[*]} )) || {
+        msg="The following files aren't recognized text files "
+        msg+="and were thus skipped:\n"
+        print_message 0 "yellow" "${msg}${unrecognized_text[*]}"
+    }
+    ! (( ${#updated} )) || {
+        msg="Copyrights were updated in the following files:\n"
+        print_message 0 "green" "${msg}${updated[*]}"
+    }
+    ! (( ${#added} )) || {
+        msg="Copyrights were added to the following files:\n"
+        print_message 0 "green" "${msg}${added[*]}"
+    }
+}
+
 main() {
-    . ../shared/checks.sh; check_binaries $(needed_binaries)
+    . shared/checks.sh; check_binaries $(needed_binaries)
     define_constants
+    local -a non_text=() unrecognized_text=() updated=() added=()
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
             [[ ${STAGED_FILES[i]} =~ R ]] && i+=1
             is_not_text_type ${STAGED_FILES[@]:i+1:1} || {
-                update_copyright ${STAGED_FILES[@]:i+1:1} ||
-                add_copyright ${STAGED_FILES[@]:i:2} ||
-                echo -e ${STAGED_FILES[i + 1]} isn\'t a recognized text file. \
-                    The copyright for ${COPYRIGHT_OWNER} wasn\'t added.
+                check_copyright ${STAGED_FILES[@]:i+1:1} ||
+                check_text_type ${STAGED_FILES[@]:i:2}
             }
         }
     done
+    print_results
 }
 main
