@@ -12,7 +12,7 @@ define_constants() {
     local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
     declare -gr COPYRIGHT_DATE_REGEX="${temp}"
     declare -gr SHEBANG_REGEX='^#!\s*(/(\w|\.)+)+'
-    temp='@@ -[[:digit:]],[[:digit:]] +[[:digit:]],[[:digit:]] @@'
+    temp='@@ -[[:digit:]]\+,[[:digit:]]\+ +[[:digit:]]\+,[[:digit:]]\+ @@'
     declare -gr HUNK_HEADER_REGEX="${temp}"
     temp="copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}"
     declare -gr COPYRIGHT_HUNK_REGEX="${temp}"
