@@ -22,17 +22,32 @@ print_message() {
     local -r MESSAGE="\n${3}"
     local -i foreground_color=7
     case "${2}" in
+        'black')
+            foreground_color=0
+        ;;
         'red')
             foreground_color=1
+        ;;
+        'green')
+            foreground_color=2
+        ;;
+        'yellow')
+            foreground_color=3
+        ;;
+        'blue')
+            foreground_color=4
+        ;;
+        'magenta')
+            foreground_color=5
         ;;
         'cyan')
             foreground_color=6
         ;;
+        'white')
+            foreground_color=7
+        ;;
         'gold')
             foreground_color=11
-        ;;
-        'yellow')
-            foreground_color=3
         ;;
         [[:digit:]]*)
             foreground_color=${2}
