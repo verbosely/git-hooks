@@ -10,10 +10,13 @@ define_constants() {
         --name-status --cached))
     declare -gir PRESENT=$(date +%Y)
     local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
-    declare -gr COPYRIGHT_REGEX="${temp}"
+    declare -gr COPYRIGHT_DATE_REGEX="${temp}"
     declare -gr SHEBANG_REGEX='^#!\s*(/(\w|\.)+)+'
     temp='@@ -[[:digit:]],[[:digit:]] +[[:digit:]],[[:digit:]] @@'
     declare -gr HUNK_HEADER_REGEX="${temp}"
+    temp="copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}"
+    declare -gr COPYRIGHT_HUNK_REGEX="${temp}"
+    declare -gr COPYRIGHT_LINE_2="All rights reserved."
     declare -Agr LANGUAGE_COMMENT_MAP=(
         ["sh"]="#"
         ["zsh"]="#"
@@ -42,7 +45,7 @@ is_not_text_type() {
 check_copyright() {
     local -ar LINE_YEAR=($(
         grep --ignore-case --line-number --max-count=1 \
-                --only-matching --perl-regexp ${COPYRIGHT_REGEX} ${1} \
+                --only-matching --perl-regexp ${COPYRIGHT_DATE_REGEX} ${1} \
             | cut --delimiter=: --fields=1,2 --output-delimiter=' '))
     (( ${#LINE_YEAR[@]} )) && update_copyright ${1}
 }
@@ -99,7 +102,7 @@ add_copyright() {
     years_to_string ${all_unique_years[@]} ; unset all_unique_years
     local line1="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} Copyright © "
     line1+="${years_str} ${COPYRIGHT_OWNER}."
-    local line2="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} All rights reserved."
+    local line2="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} ${COPYRIGHT_LINE_2}"
     local -ar COPYRIGHT=("${line1}" "${line2}") ; unset line1 line2
     sed --quiet '1p' ${!#} | grep --perl-regexp --quiet "${SHEBANG_REGEX}" && {
         sed --quiet '2p' ${!#} | grep --perl-regexp --quiet '^\s*$' &&
@@ -119,10 +122,8 @@ stage_changes() {
         hunk=$(git diff ${file} \
             | sed --quiet "/${HUNK_HEADER_REGEX}/{
                 h ; :a ; n ; /${HUNK_HEADER_REGEX}/{
-                    x ; /copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}/I{
-                        p ; q} ; g ; ba} ; H ; \${
-                    x ; /copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}/I{
-                        p ; q}} ; ba}")
+                    x ; /${COPYRIGHT_HUNK_REGEX}/I{p ; q} ; g ; ba} ; H ; \${
+                    x ; /${COPYRIGHT_HUNK_REGEX}/I{p ; q}} ; ba}")
         new_count=$(echo -e "${hunk}" \
             | sed --quiet --regexp-extended '1s/.+,([[:digit:]]+).+/\1/p')
     done
