@@ -85,34 +85,50 @@ years_to_string() {
     done
 }
 
-check_text_type() {
-    local -r FILE_TYPE=$(
-        vim -es -c "filetype detect | set filetype? | quit" ${!#} \
+is_not_recognized_text_type() {
+    file_type=$(
+        vim -es -c "filetype detect | set filetype? | quit" ${1} \
             | cut --delimiter== --fields=2)
-    [ -z "$FILE_TYPE" ] || [ -z "${LANGUAGE_COMMENT_MAP["$FILE_TYPE"]+key}" ] &&
-        unrecognized_text+=(${!#}) || { add_copyright "$@"; }
+    [ -z "$file_type" ] || [ -z "${LANGUAGE_COMMENT_MAP["$file_type"]+key}" ] &&
+        unrecognized_text+=(${1})
 }
 
-add_copyright() {
-    added+=(${!#})
+prepare_copyright() {
     local -a all_unique_years=($(
         git log --date=format:"%Y" --format=format:"%ad%n%cd" -- "$@" \
             | cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
     local years_str="${all_unique_years[0]}"
     years_to_string ${all_unique_years[@]} ; unset all_unique_years
-    local line1="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} Copyright © "
+    local line1="${LANGUAGE_COMMENT_MAP["${file_type}"]} Copyright © "
     line1+="${years_str} ${COPYRIGHT_OWNER}."
-    local line2="${LANGUAGE_COMMENT_MAP["${FILE_TYPE}"]} ${COPYRIGHT_LINE_2}"
-    local -ar COPYRIGHT=("${line1}" "${line2}") ; unset line1 line2
-    sed --quiet '1p' ${!#} | grep --perl-regexp --quiet "${SHEBANG_REGEX}" && {
-        sed --quiet '2p' ${!#} | grep --perl-regexp --quiet '^\s*$' &&
-            sed "1a \\\n${COPYRIGHT[0]}\n${COPYRIGHT[1]}" ${!#} ||
-            sed "1a \\\n${COPYRIGHT[0]}\n${COPYRIGHT[1]}\n" ${!#}
-    } || {
-        sed --quiet '1p' ${!#} | grep --perl-regexp --quiet '^\s*$' &&
-            sed "1i ${COPYRIGHT[0]}\n${COPYRIGHT[1]}" ${!#} ||
-            sed "1i ${COPYRIGHT[0]}\n${COPYRIGHT[1]}\n" ${!#}
-    }
+    local line2="${LANGUAGE_COMMENT_MAP["${file_type}"]} ${COPYRIGHT_LINE_2}"
+    copyright+=("${line1}" "${line2}") ; unset line1 line2
+}
+
+add_new_copyright() {
+    added+=(${!#})
+    local -a copyright=()
+    prepare_copyright "$@"
+    sed --regexp-extended \
+        "1{/${SHEBANG_REGEX}/{\${
+                    \$a\
+                        \\\n${copyright[0]}\n${copyright[1]}
+                    b} ;
+                n ;
+                2{/^[[:space:]]*$/{
+                        2i\
+                            \\\n${copyright[0]}\n${copyright[1]}
+                        b} ;
+                    2i\
+                        \\\n${copyright[0]}\n${copyright[1]}\n
+                    b}} ;
+            /^[[:space:]]*$/{
+                1i\
+                    ${copyright[0]}\n${copyright[1]}
+                b} ;
+            1i\
+                    ${copyright[0]}\n${copyright[1]}\n
+            b} ;" ${!#}
 }
 
 stage_changes() {
