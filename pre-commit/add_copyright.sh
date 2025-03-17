@@ -11,7 +11,7 @@ define_constants() {
     declare -gir PRESENT=$(date +%Y)
     local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
     declare -gr COPYRIGHT_DATE_REGEX="${temp}"
-    declare -gr SHEBANG_REGEX='^#!\s*(/(\w|\.)+)+'
+    declare -gr SHEBANG_REGEX='^#![[:space:]]*(\/([[:alnum:]]|[._-])+)+'
     temp='@@ -[[:digit:]]\+,[[:digit:]]\+ +[[:digit:]]\+,[[:digit:]]\+ @@'
     declare -gr HUNK_HEADER_REGEX="${temp}"
     temp="copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}"
