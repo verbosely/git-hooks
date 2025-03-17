@@ -42,7 +42,7 @@ is_not_text_type() {
         non_text+=(${1})
 }
 
-check_copyright() {
+copyright_exists() {
     local -ar LINE_YEAR=($(
         grep --ignore-case --line-number --max-count=1 \
                 --only-matching --perl-regexp ${COPYRIGHT_DATE_REGEX} ${1} \
