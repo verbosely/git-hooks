@@ -157,11 +157,11 @@ print_results() {
         msg+="and were thus skipped:\n"
         print_message 0 "yellow" "${msg}${unrecognized_text[*]}"
     }
-    ! (( ${#updated} )) || {
+    ! (( ${#updated[*]} )) || {
         msg="Copyrights were updated in the following files:\n"
         print_message 0 "green" "${msg}${updated[*]}"
     }
-    ! (( ${#added} )) || {
+    ! (( ${#added[*]} )) || {
         msg="Copyrights were added to the following files:\n"
         print_message 0 "green" "${msg}${added[*]}"
     }
