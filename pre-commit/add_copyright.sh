@@ -5,17 +5,21 @@ needed_binaries() {
 }
 
 define_constants() {
+    LC_ALL=en_US.UTF-8
+    local temp
     declare -gr COPYRIGHT_OWNER="Verbosely"
     declare -agr STAGED_FILES=($(git diff --diff-filter="ARM" \
         --name-status --cached))
     declare -gir PRESENT=$(date +%Y)
-    local temp="^(?=.*copyright)(?=.*${COPYRIGHT_OWNER})(?=.*\d{4}).*\K\d{4}"
-    declare -gr COPYRIGHT_DATE_REGEX="${temp}"
+    temp="^([[:punct:]]|[[:space:]])*copyright([[:space:]]*(\xc2\xa9|\(c\)){1}"
+    temp+="[[:space:]]*|[[:space:]]+)([[:digit:]]{4}(,[[:space:]]*|"
+    temp+="[[:space:]]+)|[[:digit:]]{4}[[:space:]]*-[[:space:]]*[[:digit:]]{4}"
+    temp+="(,[[:space:]]*|[[:space:]]+))+${COPYRIGHT_OWNER}"
+    temp+="([[:punct:]]|[[:space:]])*$"
+    declare -gr COPYRIGHT_REGEX="${temp}"
     declare -gr SHEBANG_REGEX='^#![[:space:]]*(\/([[:alnum:]]|[._-])+)+'
     temp='@@ -[[:digit:]]\+,[[:digit:]]\+ +[[:digit:]]\+,[[:digit:]]\+ @@'
     declare -gr HUNK_HEADER_REGEX="${temp}"
-    temp="copyright.*[[:digit:]]\{4\}.*${COPYRIGHT_OWNER}"
-    declare -gr COPYRIGHT_HUNK_REGEX="${temp}"
     declare -gr COPYRIGHT_LINE_2="All rights reserved."
     declare -Agr LANGUAGE_COMMENT_MAP=(
         ["sh"]="#"
