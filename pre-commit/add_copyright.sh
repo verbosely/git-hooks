@@ -95,16 +95,16 @@ years_to_string() {
 
 is_not_recognized_text_type() {
     file_type=$(
-        vim -es -c "filetype detect | set filetype? | quit" ${1} \
-            | cut --delimiter== --fields=2)
+        vim -es -c "filetype detect | set filetype? | quit" ${1} |
+            cut --delimiter== --fields=2)
     [ -z "$file_type" ] || [ -z "${LANGUAGE_COMMENT_MAP["$file_type"]+key}" ] &&
         unrecognized_text+=(${1})
 }
 
 prepare_copyright() {
     local -a all_unique_years=($(
-        git log --date=format:"%Y" --format=format:"%ad%n%cd" -- "$@" \
-            | cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
+        git log --date=format:"%Y" --format=format:"%ad%n%cd" -- "$@" |
+            cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
     local years_str="${all_unique_years[0]}"
     years_to_string ${all_unique_years[@]} ; unset all_unique_years
     local line1="${LANGUAGE_COMMENT_MAP["${file_type}"]} Copyright © "
@@ -117,8 +117,9 @@ add_new_copyright() {
     added+=(${!#})
     local -a copyright=()
     prepare_copyright "$@"
-    sed --regexp-extended \
-        "1{/${SHEBANG_REGEX}/{\${
+    check_diffs "${!#}"
+    sed --regexp-extended "
+        1{/${SHEBANG_REGEX}/{\${
                     \$a\
                         \\\n${copyright[0]}\n${copyright[1]}
                     b} ;
