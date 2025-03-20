@@ -178,18 +178,21 @@ print_results() {
 }
 
 main() {
-    . shared/checks.sh; check_binaries $(needed_binaries)
-    define_constants
+    . shared/checks.sh ; check_binaries $(needed_binaries)
+    define_constants ; unset define_constants
     local -a non_text=() unrecognized_text=() updated=() added=() staged=()
-    local -a unstaged=()
+    local -a unstaged=() no_diffs=() diffs=()
+    local -i copyright_line old_year
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
             [[ ${STAGED_FILES[i]} =~ R ]] && i+=1
-            is_not_text_type ${STAGED_FILES[@]:i+1:1} ||
-                copyright_exists ${STAGED_FILES[@]:i+1:1} ||
+            is_not_text_type ${STAGED_FILES[@]:i+1:1} || {
+                copyright_exists ${STAGED_FILES[@]:i+1:1} && {
+                    update_copyright ${STAGED_FILES[@]:i+1:1} ; continue ; }
                 is_not_recognized_text_type ${STAGED_FILES[@]:i+1:1} ||
                 add_new_copyright ${STAGED_FILES[@]:i:2}
+            }
         }
     done
     #stage_changes
