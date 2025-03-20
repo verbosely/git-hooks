@@ -141,16 +141,17 @@ add_new_copyright() {
 }
 
 stage_changes() {
+    (( ${#no_diffs[*]} )) && git add ${no_diffs[*]}
     local hunk
     local -i new_count
-    for file in ${updated[@]} ${added[@]}; do
-        hunk=$(git diff ${file} \
-            | sed --quiet "/${HUNK_HEADER_REGEX}/{
+    for file in ${diffs[@]}; do
+        hunk=$(git diff ${file} |
+            sed --quiet "/${HUNK_HEADER_REGEX}/{
                 h ; :a ; n ; /${HUNK_HEADER_REGEX}/{
-                    x ; /${COPYRIGHT_HUNK_REGEX}/I{p ; q} ; g ; ba} ; H ; \${
-                    x ; /${COPYRIGHT_HUNK_REGEX}/I{p ; q}} ; ba}")
-        new_count=$(echo -e "${hunk}" \
-            | sed --quiet --regexp-extended '1s/.+,([[:digit:]]+).+/\1/p')
+                    x ; /${COPYRIGHT_REGEX}/I{p ; q} ; g ; ba} ;
+                H ; \${x ; /${COPYRIGHT_REGEX}/I{p ; q}} ; ba}")
+        new_count=$(echo -e "${hunk}" |
+            sed --quiet --regexp-extended '1s/.+,([[:digit:]]+).+/\1/p')
     done
 }
 
