@@ -41,34 +41,38 @@ define_constants() {
     )
 }
 
+check_diffs() {
+    [[ -z "$(git diff --name-only -- "${1}")" ]] &&
+        no_diffs+=(${1}) || diffs+=(${1})
+}
+
 is_not_text_type() {
     ! [[ $(file --brief --mime-type ${1}) =~ text/ ]] &&
         non_text+=(${1})
 }
 
 copyright_exists() {
-    local -ar LINE_YEAR=($(
-        grep --ignore-case --line-number --max-count=1 \
-                --only-matching --perl-regexp ${COPYRIGHT_DATE_REGEX} ${1} \
-            | cut --delimiter=: --fields=1,2 --output-delimiter=' '))
-    (( ${#LINE_YEAR[@]} )) && update_copyright ${1}
+    read copyright_line old_year < <(
+        sed --quiet --regexp-extended "
+            /${COPYRIGHT_REGEX}/I{= ; s/.*([[:digit:]]{4}).*/\1/p ; q}" ${1} |
+        paste --delimiters=' ' --serial)
+    (( ${copyright_line} ))
 }
 
 update_copyright() {
-    ! (( PRESENT - ${LINE_YEAR[-1]} )) || {
+    (( PRESENT - ${old_year} )) && {
         updated+=(${1})
-        [[ $(( PRESENT - ${LINE_YEAR[-1]} )) -eq 1 ]] && {
-            sed --quiet "${LINE_YEAR[0]}p" ${1} \
-                | grep --perl-regexp --quiet \
-                    '^.*\d{4}\s*-\s*\d{4}(?!.*\d{4})' &&
-            sed --quiet --regexp-extended \
-                "${LINE_YEAR[0]}s/(.*)[[:digit:]]{4}/\1${PRESENT}/p" ${1} ||
-            sed --quiet --regexp-extended \
-                "${LINE_YEAR[0]}s/(.*)([[:digit:]]{4})/\1\2-${PRESENT}/p" \
-                ${1}
+        check_diffs "${1}"
+        [[ $(( PRESENT - ${old_year} )) -eq 1 ]] && {
+            sed --quiet "${copyright_line}p" ${1} |
+            grep --perl-regexp --quiet '^.*\d{4}\s*-\s*\d{4}(?!.*\d{4})' &&
+            sed --quiet --regexp-extended "
+                ${copyright_line}s/(.*)[[:digit:]]{4}/\1${PRESENT}/p" ${1} ||
+            sed --quiet --regexp-extended "
+                ${copyright_line}s/(.*)([[:digit:]]{4})/\1\2-${PRESENT}/p" ${1}
         } || {
-            sed --quiet --regexp-extended \
-                "${LINE_YEAR[0]}s/(.*[[:digit:]]{4})/\1, ${PRESENT}/p" ${1}
+            sed --quiet --regexp-extended "
+                ${copyright_line}s/(.*[[:digit:]]{4})/\1, ${PRESENT}/p" ${1}
         }
     }
 }
