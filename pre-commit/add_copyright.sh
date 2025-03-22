@@ -90,7 +90,7 @@ update_copyright() {
 years_to_string() {
     local -i consecutive=1
     local -i temp
-    for (( j=2; $# - j + 1; j++ )); do
+    for (( j=2 ; $# - j + 1 ; j++ )); do
         temp=$(( j - 1 ))
         [[ $(( ${!j} - ${!temp} )) -ne 1 ]] && {
             consecutive=1
