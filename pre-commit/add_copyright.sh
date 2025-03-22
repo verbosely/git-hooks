@@ -124,12 +124,11 @@ prepare_copyright() {
 }
 
 add_new_copyright() {
-    added+=(${!#})
     local -a copyright=()
     prepare_copyright "$@"
-    check_diffs "${!#}"
+    check_diff "${!#}"
     sed --regexp-extended "
-        1{/${SHEBANG_REGEX}/{\${
+        1{/^${SHEBANG_REGEX}/{\${
                     \$a\
                         \\\n${copyright[0]}\n${copyright[1]}
                     b} ;
