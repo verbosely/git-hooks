@@ -170,21 +170,21 @@ print_results() {
         msg+="and were thus skipped:\n"
         print_message 0 "yellow" "${msg}${unrecognized_text[*]}"
     }
-    ! (( ${#updated[*]} )) || {
-        msg="Copyrights were updated in the following files:\n"
-        print_message 0 "green" "${msg}${updated[*]}"
-    }
-    ! (( ${#added[*]} )) || {
-        msg="Copyrights were added to the following files:\n"
-        print_message 0 "green" "${msg}${added[*]}"
-    }
+    #! (( ${#updated[*]} )) || {
+    #    msg="Copyrights were updated in the following files:\n"
+    #    print_message 0 "green" "${msg}${updated[*]}"
+    #}
+    #! (( ${#added[*]} )) || {
+    #    msg="Copyrights were added to the following files:\n"
+    #    print_message 0 "green" "${msg}${added[*]}"
+    #}
 }
 
 main() {
     . shared/checks.sh ; check_binaries $(needed_binaries)
     define_constants ; unset define_constants
-    local -a non_text=() unrecognized_text=() updated=() added=() staged=()
-    local -a unstaged=() no_diffs=() diffs=()
+    local -a non_text=() unrecognized_text=() staged=() unstaged=()
+    local -a no_diff_updated=() no_diff_added=() diff_added=() diff_updated=()
     local -i copyright_line old_year
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
