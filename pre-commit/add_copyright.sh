@@ -149,18 +149,41 @@ add_new_copyright() {
             b} ;" ${!#}
 }
 
+extract_hunk() {
+    hunks+=($(
+        git diff --output-indicator-new='+' --output-indicator-old='-' \
+            --output-indicator-context=' ' ${1} |
+        sed --quiet --regexp-extended "
+            /${HUNK_HEADER_REGEX}/{h
+                :a
+                    n ; /${HUNK_HEADER_REGEX}/{
+                        x ; /\+${COPYRIGHT_REGEX}/I{p ; q} ; g ; ba} ;
+                    H ; \${x ; /\+${COPYRIGHT_REGEX}/I{p ; q}} ; ba}"))
+}
+
+extract_diff_header() {
+    diff_headers+=($(
+        git diff ${1} |
+        sed --quiet --regexp-extended "
+            1,/${HUNK_HEADER_REGEX}/{/${HUNK_HEADER_REGEX}/!p}"))
+}
+
+extract_new_count() {
+    new_counts+=($(
+        echo -e "${1}" |
+        sed --quiet --regexp-extended "1s/.+[^[:digit:]]([[:digit:]]+).+/\1/p"))
+}
+
 stage_changes() {
-    (( ${#no_diffs[*]} )) && git add ${no_diffs[*]}
-    local hunk
-    local -i new_count
-    for file in ${diffs[@]}; do
-        hunk=$(git diff ${file} |
-            sed --quiet "/${HUNK_HEADER_REGEX}/{
-                h ; :a ; n ; /${HUNK_HEADER_REGEX}/{
-                    x ; /${COPYRIGHT_REGEX}/I{p ; q} ; g ; ba} ;
-                H ; \${x ; /${COPYRIGHT_REGEX}/I{p ; q}} ; ba}")
-        new_count=$(echo -e "${hunk}" |
-            sed --quiet --regexp-extended '1s/.+,([[:digit:]]+).+/\1/p')
+    local -a hunks=() diff_headers=() new_counts=()
+    (( ${#no_diff_updated[*]} + ${#no_diff_added[*]} )) &&
+        git add "${no_diff_updated[@]}" "${no_diff_added[@]}"
+    for file in "${diff_updated[@]}" "${diff_added[@]}"; do
+        extract_hunk "${file}"
+        extract_diff_header "${file}"
+    done
+    for hunk in "${hunks[@]}"; do
+        extract_new_count "${hunk}"
     done
 }
 
