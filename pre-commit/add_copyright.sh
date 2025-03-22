@@ -11,16 +11,19 @@ define_constants() {
     declare -agr STAGED_FILES=($(git diff --diff-filter="ARM" \
         --name-status --cached))
     declare -gir PRESENT=$(date +%Y)
-    temp="^([[:punct:]]|[[:space:]])*copyright([[:space:]]*(\xc2\xa9|\(c\)){1}"
+    temp="([[:punct:]]|[[:space:]])*copyright([[:space:]]*(\xc2\xa9|\(c\))"
     temp+="[[:space:]]*|[[:space:]]+)([[:digit:]]{4}(,[[:space:]]*|"
     temp+="[[:space:]]+)|[[:digit:]]{4}[[:space:]]*-[[:space:]]*[[:digit:]]{4}"
     temp+="(,[[:space:]]*|[[:space:]]+))+${COPYRIGHT_OWNER}"
-    temp+="([[:punct:]]|[[:space:]])*$"
+    temp+="([[:punct:]]|[[:space:]])*"
     declare -gr COPYRIGHT_REGEX="${temp}"
-    declare -gr SHEBANG_REGEX='^#![[:space:]]*(\/([[:alnum:]]|[._-])+)+'
-    temp='@@ -[[:digit:]]\+,[[:digit:]]\+ +[[:digit:]]\+,[[:digit:]]\+ @@'
+    declare -gr SHEBANG_REGEX='#![[:space:]]*(\/([[:alnum:]]|[._-])+)+'
+    temp='@@ -[[:digit:]]+(,[[:digit:]]+)? \+[[:digit:]]+(,[[:digit:]]+)? @@'
     declare -gr HUNK_HEADER_REGEX="${temp}"
     declare -gr COPYRIGHT_LINE_2="All rights reserved."
+    temp="([[:punct:]]|[[:space:]])*${COPYRIGHT_LINE_2}"
+    temp+="([[:punct:]]|[[:space:]])*$"
+    declare -gr COPYRIGHT_LINE_2_REGEX="${temp}"
     declare -Agr LANGUAGE_COMMENT_MAP=(
         ["sh"]="#"
         ["zsh"]="#"
