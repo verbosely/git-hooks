@@ -44,9 +44,17 @@ define_constants() {
     )
 }
 
-check_diffs() {
-    [[ -z "$(git diff --name-only -- "${1}")" ]] &&
-        no_diffs+=(${1}) || diffs+=(${1})
+check_diff() {
+    case "${FUNCNAME[1]}" in
+        'update_copyright')
+            [[ -z "$(git diff --name-only -- "${1}")" ]] &&
+                no_diff_updated+=(${1}) || diff_updated+=(${1})
+        ;;
+        'add_new_copyright')
+            [[ -z "$(git diff --name-only -- "${1}")" ]] &&
+                no_diff_added+=(${1}) || diff_added+=(${1})
+        ;;
+    esac
 }
 
 is_not_text_type() {
