@@ -67,13 +67,13 @@ copyright_exists() {
         sed --quiet --regexp-extended "
             /^${COPYRIGHT_REGEX}$/I{= ; s/.*([[:digit:]]{4}).*/\1/p ; q}" ${1} |
         paste --delimiters=' ' --serial)
-    (( ${copyright_line} ))
+    (( copyright_line ))
 }
 
 update_copyright() {
-    (( PRESENT - ${old_year} )) && {
+    (( PRESENT - old_year )) && {
         check_diff "${1}"
-        [[ $(( PRESENT - ${old_year} )) -eq 1 ]] && {
+        [[ $(( PRESENT - old_year )) -eq 1 ]] && {
             sed --quiet "${copyright_line}p" ${1} |
             grep --perl-regexp --quiet '^.*\d{4}\s*-\s*\d{4}(?!.*\d{4})' &&
             sed --quiet --regexp-extended "
