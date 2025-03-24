@@ -172,7 +172,7 @@ extract_diff_headers() {
     done
 }
 
-extract_new_count() {
+extract_new_counts() {
     for hunk in "${hunks[@]}"; do
         new_counts+=("$(
             echo -e "${hunk}" |
