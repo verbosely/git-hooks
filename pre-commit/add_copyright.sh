@@ -295,9 +295,9 @@ apply_new_copyright_patches() {
 }
 
 stage_changes() {
-    local -a hunks=() diff_headers=() new_counts=() patches=()
-    local -a revised_hunks_for_updates=() revised_hunks_for_adds=()
-    local -a preexistent_changes_for_updates=() preexistent_changes_for_adds=()
+    local -a hunks=() diff_headers=() new_counts=() patches=() \
+        revised_hunks_for_updates=() revised_hunks_for_adds=() \
+        preexistent_changes_for_updates=() preexistent_changes_for_adds=()
     (( ${#no_diff_updated[*]} + ${#no_diff_added[*]} )) &&
         git add "${no_diff_updated[@]}" "${no_diff_added[@]}"
     extract_hunks &
@@ -345,10 +345,9 @@ notify() {
 main() {
     . shared/checks.sh ; check_binaries $(needed_binaries)
     define_constants ; unset define_constants
-    local -a non_text=() unrecognized_text=()
-    local -a no_diff_updated=() no_diff_added=() diff_added=() diff_updated=()
-    local -a diff_failures_updated=() diff_successes_updated=()
-    local -a diff_failures_added=() diff_successes_added=()
+    local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
+        no_diff_added=() diff_updated=() diff_failures_updated=() \
+        diff_successes_updated=() diff_failures_added=() diff_successes_added=()
     local -i copyright_line old_year
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
