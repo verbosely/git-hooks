@@ -222,9 +222,11 @@ find_preexistent_changes_for_add() {
 }
 
 revise_hunk_for_update() {
+    return
 }
 
 find_preexistent_changes_for_update() {
+    return
 }
 
 process_hunks_for_adds() {
@@ -301,13 +303,13 @@ stage_changes() {
     (( ${#no_diff_updated[*]} + ${#no_diff_added[*]} )) &&
         git add "${no_diff_updated[@]}" "${no_diff_added[@]}"
     extract_hunks &
-    extract_diff_headers & ; wait
+    extract_diff_headers & wait
     extract_new_counts
     process_hunks_for_adds &
-    process_hunks_for_updates & ; wait
+    process_hunks_for_updates & wait
     create_patches
     apply_updated_copyright_patches &
-    apply_new_copyright_patches & ; wait
+    apply_new_copyright_patches & wait
 }
 
 notify() {
