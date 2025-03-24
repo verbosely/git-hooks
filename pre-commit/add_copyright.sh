@@ -149,71 +149,206 @@ add_new_copyright() {
             b} ;" ${!#}
 }
 
-extract_hunk() {
-    hunks+=($(
-        git diff --output-indicator-new='+' --output-indicator-old='-' \
-            --output-indicator-context=' ' ${1} |
-        sed --quiet --regexp-extended "
-            /${HUNK_HEADER_REGEX}/{h
-                :a
-                    n ; /${HUNK_HEADER_REGEX}/{
-                        x ; /\+${COPYRIGHT_REGEX}/I{p ; q} ; g ; ba} ;
-                    H ; \${x ; /\+${COPYRIGHT_REGEX}/I{p ; q}} ; ba}"))
+extract_hunks() {
+    for file in "${diff_updated[@]}" "${diff_added[@]}"; do
+        hunks+=("$(
+            git diff --output-indicator-new='+' --output-indicator-old='-' \
+                --output-indicator-context=' ' ${file} |
+            sed --quiet --regexp-extended "
+                /${HUNK_HEADER_REGEX}/{h
+                    :a
+                        n ; /${HUNK_HEADER_REGEX}/{
+                            x ; /\+${COPYRIGHT_REGEX}/I{p ; q} ; g ; ba} ;
+                        H ; \${x ; /\+${COPYRIGHT_REGEX}/I{p ; q}} ; ba}")")
+    done
 }
 
-extract_diff_header() {
-    diff_headers+=($(
-        git diff ${1} |
-        sed --quiet --regexp-extended "
-            1,/${HUNK_HEADER_REGEX}/{/${HUNK_HEADER_REGEX}/!p}"))
+extract_diff_headers() {
+    for file in "${diff_updated[@]}" "${diff_added[@]}"; do
+        diff_headers+=("$(
+            git diff ${file} |
+            sed --quiet --regexp-extended "
+                1,/${HUNK_HEADER_REGEX}/{/${HUNK_HEADER_REGEX}/!p}")")
+    done
 }
 
 extract_new_count() {
-    new_counts+=($(
+    for hunk in "${hunks[@]}"; do
+        new_counts+=("$(
+            echo -e "${hunk}" |
+            sed --quiet --regexp-extended "
+                1s/.+[^[:digit:]]([[:digit:]]+).+/\1/p")")
+    done
+}
+
+revise_hunk_for_add() {
+    revised_hunks_for_adds+=("$(
         echo -e "${1}" |
-        sed --quiet --regexp-extended "1s/.+[^[:digit:]]([[:digit:]]+).+/\1/p"))
+        sed --quiet --regexp-extended "
+            /^(\+|-| )${SHEBANG_REGEX}/{p ; b}
+            /^\+${COPYRIGHT_REGEX}$/I{
+                p ; \${ba} ; n ; /^\+${COPYRIGHT_LINE_2_REGEX}/I{
+                    p ; \${ba} ; n ; /^\+[[:space:]]*$/{p ; ba} ; bb} ; bb}
+            /^-/{x ; /./{x ; H ; b} ; x ; h ; b}
+            p ; b
+            :a
+                x ; /./p ; bc
+            :b
+                x ; /./p ; x ; p
+            :c
+                n ; p ; bc")")
+}
+
+find_preexistent_changes_for_add() {
+    local -a preexistent_changes
+    read -a preexistent_changes < <(echo -e "${1}" |
+        nl --number-format=rn --number-separator=: - |
+        sed --quiet --regexp-extended "
+            /^[[:space:]]+[[:digit:]]+:\+[[:space:]]*$/{\${ba} ; h ; n}
+            /^[[:space:]]+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/I{
+                n ; /^[[:space:]]+[[:digit:]]+:\+${COPYRIGHT_LINE_2_REGEX}/I{
+                    n ; /^[[:space:]]+[[:digit:]]+:\+[[:space:]]*$/{
+                        s/.*// ; x ; d}
+                    x ; s/.*// ; x}}
+            x ; /^$/x
+            :a
+                /^[[:space:]]+[[:digit:]]+:\+/{
+                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/n/p}
+                /^[[:space:]]+[[:digit:]]+:-/{
+                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/o/p}
+                s/.*// ; x ; /./ba" |
+        paste --delimiters=' ' --serial)
+    preexistent_changes_for_adds+=("${preexistent_changes[*]}")
+}
+
+revise_hunk_for_update() {
+}
+
+find_preexistent_changes_for_update() {
+}
+
+process_hunks_for_adds() {
+    for hunk in "${hunks[@]:${#diff_updated[*]}}"; do
+        revise_hunk_for_add "${hunk}"
+    done
+    for revised_hunk in "${revised_hunks_for_adds[@]}"; do
+        find_preexistent_changes_for_add "${revised_hunk}"
+    done
+}
+
+process_hunks_for_updates() {
+    for hunk in "${hunks[@]::${#diff_updated[*]}}"; do
+        revise_hunk_for_update "${hunk}"
+    done
+    for revised_hunk in "${revised_hunks_for_updates[@]}"; do
+        find_preexistent_changes_for_update "${revised_hunk}"
+    done
+}
+
+build_final_hunk_regex() {
+    for (( j=0 ; ${#preexistent_changes[*]} - j ; j+=2 )); do
+        [ ${preexistent_changes[j+1]} = 'n' ] && {
+            hunk_fix_regex+="${preexistent_changes[j]}d;"
+            (( new_counts[i]-- )) ; } || {
+            hunk_fix_regex+="${preexistent_changes[j]}s/^-(.*)/ \1/;"
+            (( new_counts[i]++ )) ; }
+    done
+}
+
+create_patches() {
+    local hunk_fix_regex
+    local -a preexistent_changes
+    local -ar PREEXISTENT_CHANGES_ALL=("${preexistent_changes_for_updates[@]}"
+        "${preexistent_changes_for_adds[@]}")
+    local -ar REVISED_HUNKS_ALL=(
+        "${revised_hunks_for_updates[@]}" "${revised_hunks_for_adds[@]}")
+    for (( i=0 ; ${#PREEXISTENT_CHANGES_ALL[*]} - i ; i++ )); do
+        preexistent_changes=(${PREEXISTENT_CHANGES_ALL[i]})
+        hunk_fix_regex=""
+        build_final_hunk_regex
+        (( ${#preexistent_changes[*]} )) &&
+            patches+=("${diff_headers[i]}\n$(
+                echo -e "${REVISED_HUNKS_ALL[i]}" |
+                sed --regexp-extended "
+                    1s/(.+[^[:digit:]])[[:digit:]]+(.+)/\1${new_counts[i]}\2/
+                    ${hunk_fix_regex}")") ||
+            patches+=("${diff_headers[i]}\n${REVISED_HUNKS_ALL[i]}")
+    done
+}
+
+apply_updated_copyright_patches() {
+    for (( i=0 ; ${#diff_updated[*]} - i ; i++ )); do
+        echo -e "${patches[i]}" |
+                git apply --cached --whitespace=fix - &> /dev/null &&
+            diff_successes_updated+=("${diff_updated[i]}") ||
+            diff_failures_updated+=("${diff_updated[i]}")
+    done
+}
+
+apply_new_copyright_patches() {
+    for (( i=0 ; ${#diff_added[*]} - i ; i++ )); do
+        echo -e "${patches[@]:${#diff_updated[*] + i}:1}" |
+                git apply --cached --whitespace=fix - &> /dev/null &&
+            diff_successes_added+=("${diff_updated[i]}") ||
+            diff_failures_added+=("${diff_updated[i]}")
+    done
 }
 
 stage_changes() {
-    local -a hunks=() diff_headers=() new_counts=()
+    local -a hunks=() diff_headers=() new_counts=() patches=()
+    local -a revised_hunks_for_updates=() revised_hunks_for_adds=()
+    local -a preexistent_changes_for_updates=() preexistent_changes_for_adds=()
     (( ${#no_diff_updated[*]} + ${#no_diff_added[*]} )) &&
         git add "${no_diff_updated[@]}" "${no_diff_added[@]}"
-    for file in "${diff_updated[@]}" "${diff_added[@]}"; do
-        extract_hunk "${file}"
-        extract_diff_header "${file}"
-    done
-    for hunk in "${hunks[@]}"; do
-        extract_new_count "${hunk}"
-    done
+    extract_hunks &
+    extract_diff_headers & ; wait
+    extract_new_counts
+    process_hunks_for_adds &
+    process_hunks_for_updates & ; wait
+    create_patches
+    apply_updated_copyright_patches &
+    apply_new_copyright_patches & ; wait
 }
 
-print_results() {
+notify() {
     local msg
     ! (( ${#non_text[*]} )) || {
         msg="The following files aren't of text MIME type "
-        msg+="and were thus skipped:\n"
-        print_message 0 "yellow" "${msg}${non_text[*]}"
+        msg+="and were thus skipped:\n${non_text[*]}"
+        print_message 0 "yellow" "${msg}"
     }
     ! (( ${#unrecognized_text[*]} )) || {
         msg="The following files aren't recognized text files "
-        msg+="and were thus skipped:\n"
-        print_message 0 "yellow" "${msg}${unrecognized_text[*]}"
+        msg+="and were thus skipped:\n${unrecognized_text[*]}"
+        print_message 0 "yellow" "${msg}"
     }
-    #! (( ${#updated[*]} )) || {
-    #    msg="Copyrights were updated in the following files:\n"
-    #    print_message 0 "green" "${msg}${updated[*]}"
-    #}
-    #! (( ${#added[*]} )) || {
-    #    msg="Copyrights were added to the following files:\n"
-    #    print_message 0 "green" "${msg}${added[*]}"
-    #}
+    ! (( ${#no_diff_updated[*]} + ${#diff_successes_updated[*]} )) || {
+        msg="Copyrights were updated in the following files "
+        msg+="in the working tree and index:\n"
+        msg+="${no_diff_updated[*]} ${diff_successes_updated[*]}"
+        print_message 0 "green" "${msg}"
+    }
+    ! (( ${#no_diff_added[*]} + ${#diff_successes_added[*]} )) || {
+        msg="Copyrights were added to the following files "
+        msg+="in the working tree and index:\n"
+        msg+="${no_diff_added[*]} ${diff_successes_added[*]}"
+        print_message 0 "green" "${msg}"
+    }
+    ! (( ${#diff_failures_added[*]} + ${#diff_failures_updated[*]} )) || {
+        msg="Failed to apply patches to the index!\nCopyrights were added "
+        msg+="or updated in the following files in the working tree only:\n"
+        msg+="${diff_failures_added[*]} ${diff_failures_updated[*]}"
+        print_message 0 "red" "${msg}"
+    }
 }
 
 main() {
     . shared/checks.sh ; check_binaries $(needed_binaries)
     define_constants ; unset define_constants
-    local -a non_text=() unrecognized_text=() staged=() unstaged=()
+    local -a non_text=() unrecognized_text=()
     local -a no_diff_updated=() no_diff_added=() diff_added=() diff_updated=()
+    local -a diff_failures_updated=() diff_successes_updated=()
+    local -a diff_failures_added=() diff_successes_added=()
     local -i copyright_line old_year
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
@@ -227,7 +362,7 @@ main() {
             }
         }
     done
-    #stage_changes
-    print_results
+    stage_changes ; unset diff_added diff_updated
+    notify
 }
 main
