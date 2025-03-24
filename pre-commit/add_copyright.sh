@@ -338,7 +338,7 @@ notify() {
         msg="Failed to apply patches to the index!\nCopyrights were added "
         msg+="or updated in the following files in the working tree only:\n"
         msg+="${diff_failures_added[*]} ${diff_failures_updated[*]}"
-        print_message 0 "red" "${msg}"
+        print_message 1 "red" "${msg}"
     }
 }
 
