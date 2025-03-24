@@ -76,13 +76,13 @@ update_copyright() {
         [[ $(( PRESENT - old_year )) -eq 1 ]] && {
             sed --quiet "${copyright_line}p" ${1} |
             grep --perl-regexp --quiet '^.*\d{4}\s*-\s*\d{4}(?!.*\d{4})' &&
-            sed --quiet --regexp-extended "
-                ${copyright_line}s/(.*)[[:digit:]]{4}/\1${PRESENT}/p" ${1} ||
-            sed --quiet --regexp-extended "
-                ${copyright_line}s/(.*)([[:digit:]]{4})/\1\2-${PRESENT}/p" ${1}
+            sed --in-place --regexp-extended "
+                ${copyright_line}s/(.*)[[:digit:]]{4}/\1${PRESENT}/" ${1} ||
+            sed --in-place --regexp-extended "
+                ${copyright_line}s/(.*)([[:digit:]]{4})/\1\2-${PRESENT}/" ${1}
         } || {
-            sed --quiet --regexp-extended "
-                ${copyright_line}s/(.*[[:digit:]]{4})/\1, ${PRESENT}/p" ${1}
+            sed --in-place --regexp-extended "
+                ${copyright_line}s/(.*[[:digit:]]{4})/\1, ${PRESENT}/" ${1}
         }
     }
 }
@@ -127,7 +127,7 @@ add_new_copyright() {
     local -a copyright=()
     prepare_copyright "$@"
     check_diff "${!#}"
-    sed --regexp-extended "
+    sed --in-place --regexp-extended "
         1{/^${SHEBANG_REGEX}/{\${
                     \$a\
                         \\\n${copyright[0]}\n${copyright[1]}
