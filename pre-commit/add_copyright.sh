@@ -153,7 +153,7 @@ extract_hunks() {
     for file in "${diff_updated[@]}" "${diff_added[@]}"; do
         hunks+=("$(
             git diff --output-indicator-new='+' --output-indicator-old='-' \
-                --output-indicator-context=' ' ${file} |
+                --output-indicator-context=' ' "${file}" |
             sed --quiet --regexp-extended "
                 /${HUNK_HEADER_REGEX}/{h
                     :a
