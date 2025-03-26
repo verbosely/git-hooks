@@ -302,14 +302,14 @@ stage_changes() {
         preexistent_changes_for_updates=() preexistent_changes_for_adds=()
     (( ${#no_diff_updated[*]} + ${#no_diff_added[*]} )) &&
         git add "${no_diff_updated[@]}" "${no_diff_added[@]}"
-    extract_hunks &
-    extract_diff_headers & wait
+    extract_hunks
+    extract_diff_headers
     extract_new_counts
-    process_hunks_for_adds &
-    process_hunks_for_updates & wait
+    process_hunks_for_adds
+    process_hunks_for_updates
     create_patches
-    apply_updated_copyright_patches &
-    apply_new_copyright_patches & wait
+    apply_updated_copyright_patches
+    apply_new_copyright_patches
 }
 
 notify() {
