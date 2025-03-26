@@ -289,7 +289,7 @@ apply_updated_copyright_patches() {
 
 apply_new_copyright_patches() {
     for (( i=0 ; ${#diff_added[*]} - i ; i++ )); do
-        echo -e "${patches[@]:${#diff_updated[*] + i}:1}" |
+        echo -e "${patches[@]:${#diff_updated[*]} + i:1}" |
                 git apply --cached --whitespace=fix - &> /dev/null &&
             diff_successes_added+=("${diff_added[i]}") ||
             diff_failures_added+=("${diff_added[i]}")
