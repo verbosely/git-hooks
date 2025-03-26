@@ -354,7 +354,7 @@ main() {
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
-            [[ ${STAGED_FILES[i]} =~ R ]] && i+=1
+            [[ ${STAGED_FILES[i]} =~ R ]] && (( i++ ))
             is_not_text_type ${STAGED_FILES[@]:i+1:1} || {
                 copyright_exists ${STAGED_FILES[@]:i+1:1} && {
                     update_copyright ${STAGED_FILES[@]:i+1:1} ; continue ; }
