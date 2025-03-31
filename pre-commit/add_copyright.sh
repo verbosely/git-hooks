@@ -222,7 +222,25 @@ find_preexistent_changes_for_add() {
 }
 
 revise_hunk_for_update() {
-    return
+    revised_hunks_for_updates+=("$(
+        echo -e "${hunk}" |
+        sed --quiet --regexp-extended "
+            /^-${COPYRIGHT_REGEX}$/I{x ; /./{p ; s/.*//} ; x ; p ; ba}
+            /^\+${COPYRIGHT_REGEX}$/Ibd
+            /^(\+|-)${SHEBANG_REGEX}/bc
+            /^(\+|-)/{\${bc} ; x ; /./{x ; H ; b} ; x ; h ; b}
+            bc
+            :a
+                n
+                /^\+${COPYRIGHT_REGEX}$/Ibd
+                /^(\+|-)/{\${bc} ; x ; /./{x ; H ; ba} ; x ; h ; ba}
+                bc
+            :b
+                n ; p ; bb
+            :c
+                x ; /./{p ; s/.*//} ; x ; p ; b
+            :d
+                p ; x ; /./p ; bb")")
 }
 
 find_preexistent_changes_for_update() {
