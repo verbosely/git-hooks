@@ -223,7 +223,7 @@ find_preexistent_changes_for_add() {
 
 revise_hunk_for_update() {
     revised_hunks_for_updates+=("$(
-        echo -e "${hunk}" |
+        echo -e "${1}" |
         sed --quiet --regexp-extended "
             /^-${COPYRIGHT_REGEX}$/I{x ; /./{p ; s/.*//} ; x ; p ; ba}
             /^\+${COPYRIGHT_REGEX}$/Ibd
