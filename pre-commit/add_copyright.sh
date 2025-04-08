@@ -365,28 +365,30 @@ print_results() {
         print_message 0 "yellow" "${msg}"
     }
     ! (( ${#no_diff_updated[*]} + ${#diff_successes_updated[*]} )) || {
+        local -a update=("${no_diff_updated[@]}" "${diff_successes_updated[@]}")
         msg="Copyrights were updated in the following files "
-        msg+="in the working tree and index:\n"
-        msg+="${no_diff_updated[*]} ${diff_successes_updated[*]}"
+        msg+="in the working tree and index:\n${update[*]}"
         print_message 0 "green" "${msg}"
     }
     ! (( ${#no_diff_added[*]} + ${#diff_successes_added[*]} )) || {
+        local -a add=("${no_diff_added[@]}" "${diff_successes_added[@]}")
         msg="Copyrights were added to the following files "
-        msg+="in the working tree and index:\n"
-        msg+="${no_diff_added[*]} ${diff_successes_added[*]}"
+        msg+="in the working tree and index:\n${add[*]}"
         print_message 0 "green" "${msg}"
     }
     ! (( ${#diff_failures_added[*]} + ${#diff_failures_updated[*]} )) || {
+        local -a failures=("${diff_failures_added[@]}"
+            "${diff_failures_updated[@]}")
         msg="Failed to apply patches to the index!\nCopyrights were added "
         msg+="or updated in the following files in the working tree only:\n"
-        msg+="${diff_failures_added[*]} ${diff_failures_updated[*]}"
+        msg+="${failures[*]}"
         print_message 1 "red" "${msg}"
     }
 }
 
 main() {
-    . shared/checks.sh ; check_binaries $(needed_binaries)
-    define_constants ; unset define_constants
+    . shared/checks.sh ; print_hook_lifecycle "start" "${0}"
+    check_binaries $(needed_binaries) ; define_constants
     local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
         no_diff_added=() diff_updated=() diff_failures_updated=() \
         diff_successes_updated=() diff_failures_added=() diff_successes_added=()
