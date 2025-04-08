@@ -406,6 +406,6 @@ main() {
         }
     done
     stage_changes ; unset diff_added diff_updated
-    notify
+    print_results ; print_hook_lifecycle "end" "${0}"
 }
 main
