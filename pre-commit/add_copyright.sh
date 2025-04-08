@@ -42,6 +42,7 @@ define_constants() {
         ["javascript"]="//"
         ["typescript"]="//"
     )
+    unset define_constants
 }
 
 check_diff() {
