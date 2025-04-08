@@ -1,7 +1,5 @@
-# Author: Zachary Flohr
-#
-# Functions for printing terminal-dependent messages and for shell
-# exiting.
+# Functions for printing terminal-dependent messages
+# and for shell exiting.
 
 ########################################################################
 # Print a colorized message to stdout or stderr.
