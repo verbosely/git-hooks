@@ -8,5 +8,5 @@ check_binaries() {
         which ${binary} &> /dev/null || missing_binaries+=($binary)
     done
     ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
-    unset check_binaries
+    #unset check_binaries
 }
