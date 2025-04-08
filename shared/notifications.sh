@@ -1,8 +1,11 @@
-# Functions for printing terminal-dependent messages
-# and for shell exiting.
+# Functions for printing notifications and for exiting the shell.
 
 ########################################################################
 # Print a colorized message to stdout or stderr.
+# 
+# Screen operations are performed by manipulating the terminfo database
+# via terminal-independent ncurses routines.
+#
 # Arguments:
 #   1: An integer, which indicates to which data stream to send the
 #      message: zero for stdout, non-zero for stderr.
@@ -10,9 +13,11 @@
 #      an integer. If an integer, it will be the argument to the
 #      "setaf" terminal capability. 
 #   3: A message to print.
+#
 # Outputs:
 #   Writes $3 to stdout if $1 is zero.
 #   Writes $3 to stderr if $1 is non-zero.
+#
 # Returns:
 #   0
 ########################################################################
