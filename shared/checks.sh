@@ -1,3 +1,6 @@
+# Copyright © 2025 Verbosely.
+# All rights reserved.
+
 . $(dirname ${BASH_SOURCE[0]})/notifications.sh
 
 check_binaries() {
@@ -8,5 +11,5 @@ check_binaries() {
         which ${binary} &> /dev/null || missing_binaries+=($binary)
     done
     ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[*]}"
-    #unset check_binaries
+    unset check_binaries
 }
