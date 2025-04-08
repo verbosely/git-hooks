@@ -1,4 +1,4 @@
-. $(pwd)/$(dirname ${BASH_SOURCE[0]})/notifications.sh
+. $(dirname ${BASH_SOURCE[0]})/notifications.sh
 
 check_binaries() {
     local -a missing_binaries=()
