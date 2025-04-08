@@ -352,7 +352,7 @@ stage_changes() {
     apply_new_copyright_patches
 }
 
-notify() {
+print_results() {
     local msg
     ! (( ${#non_text[*]} )) || {
         msg="The following files aren't of text MIME type "
