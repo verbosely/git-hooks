@@ -57,6 +57,7 @@ print_message() {
     tput setaf ${foreground_color} 2> /dev/null     # Set foreground color
     (( ${1} )) && echo -e "${MESSAGE}" >&2 || echo -e "${MESSAGE}"
     tput sgr0 2> /dev/null                          # Turn off all attributes
+    return 0
 }
 
 terminate() {
