@@ -10,11 +10,12 @@ its programs are intended to be executed. For example, programs in
 
 **Operating System:** Ubuntu 22.04 or higher, Debian 12.0 or higher
 
-**Packages:** *bash, coreutils, debianutils, file, git, grep, ncurses-bin, sed,
-vim*
+**System Packages:** *bash, coreutils, debianutils, file, git, grep,
+ncurses-bin, sed, vim*
 
-All packages reside in the main sections of the Debian and Ubuntu archives, and
-they are thus Debian- or Canonical-maintained, respectively.
+> [!NOTE]
+> All packages reside in the main sections of the Debian and Ubuntu archives, and
+> they are thus Debian- or Canonical-maintained, respectively.
 
 ## Contributing
 
