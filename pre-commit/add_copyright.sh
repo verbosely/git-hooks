@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright © 2025 Verbosely.
+# All rights reserved.
+
 needed_binaries() {
     echo "file git grep sed vim"
 }
@@ -387,6 +390,7 @@ print_results() {
 }
 
 main() {
+    echo zach
     . shared/checks.sh ; print_hook_lifecycle "start" "${0}"
     check_binaries $(needed_binaries) ; define_constants
     local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
@@ -408,4 +412,4 @@ main() {
     stage_changes ; unset diff_added diff_updated
     print_results ; print_hook_lifecycle "end" "${0}"
 }
-#main
+main
