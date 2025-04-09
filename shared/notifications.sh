@@ -1,3 +1,6 @@
+# Copyright © 2025 Verbosely.
+# All rights reserved.
+
 # Functions for printing notifications and for exiting the shell.
 
 ########################################################################
@@ -85,6 +88,17 @@ print_hook_lifecycle() {
         ;;
         'end')
             print_message 0 "cyan" "$(basename "${2}") completed."
+        ;;
+    esac
+}
+
+print_hook_type_lifecycle() {
+    case "${2}" in
+        'start')
+            print_message 0 "blue" "Running ${1} hooks..."
+        ;;
+        'end')
+            print_message 0 "blue" "${1} hooks completed."
         ;;
     esac
 }
