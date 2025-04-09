@@ -3,6 +3,14 @@
 # Copyright © 2025 Verbosely.
 # All rights reserved.
 
+# This program checks for copyright notices in certain files that are of
+# text MIME type and that have contents staged for a commit. A copyright
+# notice is added to a file in the working tree and the index if one
+# doesn't already exist; otherwise, the existing copyright is updated in
+# the working tree and the index if it's not current. Only the
+# modifications this program makes are added to the index; pre-existent
+# unstaged file contents remain unstaged.
+
 needed_binaries() {
     echo "file git grep sed vim"
 }
