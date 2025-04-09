@@ -13,7 +13,8 @@ its programs are intended to be executed. For example, programs in
 **Packages:** *bash, coreutils, debianutils, file, git, grep, ncurses-bin, sed,
 vim*
 
-All packages reside in the main sections of the Debian and Ubuntu archives.
+All packages reside in the main sections of the Debian and Ubuntu archives, and
+they are thus Debian- or Canonical-maintained, respectively.
 
 ## Contributing
 
