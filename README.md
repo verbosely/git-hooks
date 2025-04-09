@@ -14,7 +14,8 @@ Ubuntu 22.04 or higher, Debian 12.0 or higher
 
 **System Packages:**
 
-Run the following commands to install required packages and their dependencies:
+Run the following commands on Debian and Ubuntu systems to install required
+packages and their dependencies:
 
 ```
 sudo apt update
