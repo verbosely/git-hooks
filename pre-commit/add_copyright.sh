@@ -390,7 +390,6 @@ print_results() {
 }
 
 main() {
-    echo zach
     . shared/checks.sh ; print_hook_lifecycle "start" "${0}"
     check_binaries $(needed_binaries) ; define_constants
     local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
