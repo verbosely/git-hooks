@@ -140,25 +140,16 @@ add_new_copyright() {
     prepare_copyright "$@"
     check_diff "${!#}"
     sed --in-place --regexp-extended "
-        1{/^${SHEBANG_REGEX}/{\${
-                    \$a\
-                        \\\n${copyright[0]}\n${copyright[1]}
-                    b} ;
-                n ;
-                2{/^[[:space:]]*$/{
-                        2i\
-                            \\\n${copyright[0]}\n${copyright[1]}
-                        b} ;
-                    2i\
-                        \\\n${copyright[0]}\n${copyright[1]}\n
-                    b}} ;
-            /^[[:space:]]*$/{
-                1i\
-                    ${copyright[0]}\n${copyright[1]}
-                b} ;
-            1i\
-                    ${copyright[0]}\n${copyright[1]}\n
-            b} ;" ${!#}
+        1{/^${SHEBANG_REGEX}/{\${\$a \\\n${copyright[0]}\n${copyright[1]}
+                        } ; n
+                    2{/^[[:space:]]*$/{2i \\\n${copyright[0]}\n${copyright[1]}
+                            b}
+                        2i \\\n${copyright[0]}\n${copyright[1]}\n
+                        b}}
+                /^[[:space:]]*$/{1i ${copyright[0]}\n${copyright[1]}
+                    b}
+                1i ${copyright[0]}\n${copyright[1]}\n
+                b}" "${!#}"
 }
 
 extract_hunks() {
