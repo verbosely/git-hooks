@@ -127,26 +127,33 @@ prepare_copyright() {
             cat - <(echo -e "\n${PRESENT}") | sort --numeric-sort --unique))
     local years_str="${all_unique_years[0]}"
     years_to_string ${all_unique_years[@]} ; unset all_unique_years
-    local line1="${LANGUAGE_COMMENT_MAP["${file_type}"]} Copyright © "
-    line1+="${years_str} ${COPYRIGHT_OWNER}."
-    local line2="${LANGUAGE_COMMENT_MAP["${file_type}"]} ${COPYRIGHT_LINE_2}"
-    copyright+=("${line1}" "${line2}") ; unset line1 line2
+    [ ${file_type} = "markdown" ] && {
+        local line1="${LANGUAGE_COMMENT_MAP["${file_type}"]}\nCopyright © "
+        line1+="${years_str} ${COPYRIGHT_OWNER}."
+        local line2="${COPYRIGHT_LINE_2}\n-->"
+    } || {
+        local line1="${LANGUAGE_COMMENT_MAP["${file_type}"]} Copyright © "
+        line1+="${years_str} ${COPYRIGHT_OWNER}."
+        local line2="${LANGUAGE_COMMENT_MAP["${file_type}"]} "
+        line2+="${COPYRIGHT_LINE_2}"
+    }
+    copyright="${line1}\n${line2}" ; unset line1 line2
 }
 
 add_new_copyright() {
-    local -a copyright=()
+    local copyright
     prepare_copyright "$@"
     check_diff "${!#}"
     sed --in-place --regexp-extended "
-        1{/^${SHEBANG_REGEX}/{\${\$a \\\n${copyright[0]}\n${copyright[1]}
+        1{/^${SHEBANG_REGEX}/{\${\$a \\\n${copyright}
                         } ; n
-                    2{/^[[:space:]]*$/{2i \\\n${copyright[0]}\n${copyright[1]}
+                    2{/^[[:space:]]*$/{2i \\\n${copyright}
                             b}
-                        2i \\\n${copyright[0]}\n${copyright[1]}\n
+                        2i \\\n${copyright}\n
                         b}}
-                /^[[:space:]]*$/{1i ${copyright[0]}\n${copyright[1]}
+                /^[[:space:]]*$/{1i ${copyright}
                     b}
-                1i ${copyright[0]}\n${copyright[1]}\n
+                1i ${copyright}\n
                 b}" "${!#}"
 }
 
