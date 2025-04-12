@@ -210,21 +210,23 @@ revise_hunk_for_add() {
 
 find_preexistent_changes_for_add() {
     local -a preexistent_changes
+    local -r MULTILINE_REGEX='^\s+([[:digit:]]+):\+.+\n\s+([[:digit:]]+).+'
     read -a preexistent_changes < <(echo -e "${1}" |
         nl --number-format=rn --number-separator=: - |
         sed --quiet --regexp-extended "
-            /^[[:space:]]+[[:digit:]]+:\+[[:space:]]*$/{\${ba} ; h ; n}
-            /^[[:space:]]+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/I{
-                n ; /^[[:space:]]+[[:digit:]]+:\+${COPYRIGHT_LINE_2_REGEX}/I{
-                    n ; /^[[:space:]]+[[:digit:]]+:\+[[:space:]]*$/{
-                        s/.*// ; x ; d}
-                    x ; s/.*// ; x}}
-            x ; /^$/x
+            /^\s+[[:digit:]]+:\+[[:space:]]*$/{\${ba} ; H ; n}
+            /^\s+[[:digit:]]+:\+<!--$/{\${ba} ; H ; n
+                /^\s+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/I{n ; n ; n
+                    /^\s+[[:digit:]]+:\+[[:space:]]*$/{s/.*// ; x ; d} ; bb}}
+            /^\s+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/I{
+                n ; n ; /^\s+[[:digit:]]+:\+[[:space:]]*$/{s/.*// ; x ; d} ; bb}
+            x ; /^$/x ; ba
+            :b
+                x ; s/.*// ; x
             :a
-                /^[[:space:]]+[[:digit:]]+:\+/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/n/p}
-                /^[[:space:]]+[[:digit:]]+:-/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/o/p}
+                /^\s+[[:digit:]]+:\+.+\n.+/{s/${MULTILINE_REGEX}/\1\nn\n\2\nn/p}
+                /^\s+[[:digit:]]+:\+/{s/^\s+([[:digit:]]+).*/\1\nn/p}
+                /^\s+[[:digit:]]+:-/{s/^\s+([[:digit:]]+).*/\1\no/p}
                 s/.*// ; x ; /./ba" |
         paste --delimiters=' ' --serial)
     preexistent_changes_for_adds+=("${preexistent_changes[*]}")
