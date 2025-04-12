@@ -194,9 +194,10 @@ revise_hunk_for_add() {
         echo -e "${1}" |
         sed --quiet --regexp-extended "
             /^(\+|-| )${SHEBANG_REGEX}/{p ; b}
+            /^\+<!--$/{p ; n ; p ; n ; p ; n ; p ; \${ba} ; n
+                /^\+[[:space:]]*$/{p ; ba} ; bb}
             /^\+${COPYRIGHT_REGEX}$/I{
-                p ; \${ba} ; n ; /^\+${COPYRIGHT_LINE_2_REGEX}/I{
-                    p ; \${ba} ; n ; /^\+[[:space:]]*$/{p ; ba} ; bb} ; bb}
+                p ; n ; p ; \${ba} ; n ; /^\+[[:space:]]*$/{p ; ba} ; bb}
             /^-/{x ; /./{x ; H ; b} ; x ; h ; b}
             p ; b
             :a
