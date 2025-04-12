@@ -259,21 +259,17 @@ find_preexistent_changes_for_update() {
     read -a preexistent_changes < <(echo -e "${1}" |
         nl --number-format=rn --number-separator=: - |
         sed --quiet --regexp-extended "
-            /^[[:space:]]+[[:digit:]]+:-${COPYRIGHT_REGEX}$/I{h ; n}
-            /^[[:space:]]+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/Ibb
+            /^\s+[[:digit:]]+:-${COPYRIGHT_REGEX}$/I{h ; n}
+            /^\s+[[:digit:]]+:\+${COPYRIGHT_REGEX}$/Ibb
             x ; /^$/x
             :a
-                /^[[:space:]]+[[:digit:]]+:\+/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/n/p}
-                /^[[:space:]]+[[:digit:]]+:-/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/o/p}
+                /^\s+[[:digit:]]+:\+/{s/^\s+([[:digit:]]+).*/\1\nn/p}
+                /^\s+[[:digit:]]+:-/{s/^\s+([[:digit:]]+).*/\1\no/p}
                 s/.*// ; x ; /./ba ; b
             :b
                 n
-                /^[[:space:]]+[[:digit:]]+:\+/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/n/p}
-                /^[[:space:]]+[[:digit:]]+:-/{
-                    s/^[[:space:]]+([[:digit:]]+).*/\1/p ; s/.*/o/p}
+                /^\s+[[:digit:]]+:\+/{s/^\s+([[:digit:]]+).*/\1\nn/p}
+                /^\s+[[:digit:]]+:-/{s/^\s+([[:digit:]]+).*/\1\no/p}
                 bb" |
         paste --delimiters=' ' --serial)
     preexistent_changes_for_updates+=("${preexistent_changes[*]}")
