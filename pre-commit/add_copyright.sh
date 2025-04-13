@@ -379,7 +379,8 @@ print_results() {
 }
 
 main() {
-    . shared/checks.sh ; print_hook_lifecycle "start" "${0}"
+    . $(dirname ${BASH_SOURCE[0]})/../shared/checks.sh
+    print_hook_lifecycle "start" "${0}"
     check_binaries $(needed_binaries) ; define_constants
     local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
         no_diff_added=() diff_updated=() diff_failures_updated=() \
