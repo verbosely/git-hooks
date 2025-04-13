@@ -36,8 +36,7 @@ define_constants() {
         ["bash"]="#" ["conf"]="#" ["csh"]="#" ["dash"]="#" ["fish"]="#"
         ["go"]="//" ["javascript"]="//" ["ksh"]="#" ["markdown"]="<!--"
         ["nginx"]="#" ["python"]="#" ["ruby"]="#" ["sh"]="#" ["tcsh"]="#"
-        ["typescript"]="//" ["xonsh"]="#" ["zsh"]="#"
-    )
+        ["typescript"]="//" ["xonsh"]="#" ["zsh"]="#")
     unset define_constants
 }
 
