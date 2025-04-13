@@ -91,14 +91,3 @@ print_hook_lifecycle() {
         ;;
     esac
 }
-
-print_hook_type_lifecycle() {
-    case "${2}" in
-        'start')
-            print_message 0 "blue" "Running ${1} hooks..."
-        ;;
-        'end')
-            print_message 0 "blue" "${1} hooks completed."
-        ;;
-    esac
-}
