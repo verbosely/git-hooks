@@ -1,4 +1,9 @@
-# Git Hooks
+<!--
+Copyright © 2025 Verbosely.
+All rights reserved.
+-->
+
+## Git Hooks
 
 This repository contains Bash programs that may be integrated into Git hook
 workflows of teams throughout Verbosely to automate adherence to company-wide
