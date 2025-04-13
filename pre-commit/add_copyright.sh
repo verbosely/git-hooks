@@ -33,23 +33,10 @@ define_constants() {
     declare -gr HUNK_HEADER_REGEX="${temp}"
     declare -gr COPYRIGHT_LINE_2="All rights reserved."
     declare -Agr LANGUAGE_COMMENT_MAP=(
-        ["bash"]="#"
-        ["conf"]="#"
-        ["csh"]="#"
-        ["dash"]="#"
-        ["fish"]="#"
-        ["go"]="//"
-        ["javascript"]="//"
-        ["ksh"]="#"
-        ["markdown"]="<!--"
-        ["nginx"]="#"
-        ["python"]="#"
-        ["ruby"]="#"
-        ["sh"]="#"
-        ["tcsh"]="#"
-        ["typescript"]="//"
-        ["xonsh"]="#"
-        ["zsh"]="#"
+        ["bash"]="#" ["conf"]="#" ["csh"]="#" ["dash"]="#" ["fish"]="#"
+        ["go"]="//" ["javascript"]="//" ["ksh"]="#" ["markdown"]="<!--"
+        ["nginx"]="#" ["python"]="#" ["ruby"]="#" ["sh"]="#" ["tcsh"]="#"
+        ["typescript"]="//" ["xonsh"]="#" ["zsh"]="#"
     )
     unset define_constants
 }
