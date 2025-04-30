@@ -37,7 +37,7 @@ define_constants() {
         ["go"]="//" ["javascript"]="//" ["ksh"]="#" ["markdown"]="<!--"
         ["nginx"]="#" ["python"]="#" ["ruby"]="#" ["sh"]="#" ["tcsh"]="#"
         ["typescript"]="//" ["xonsh"]="#" ["zsh"]="#")
-    unset define_constants
+    unset -f define_constants
 }
 
 check_diff() {
