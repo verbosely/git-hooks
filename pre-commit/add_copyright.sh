@@ -84,8 +84,7 @@ update_copyright() {
 }
 
 years_to_string() {
-    local -i consecutive=1
-    local -i temp
+    local -i j consecutive=1 temp
     for (( j=2 ; $# - j + 1 ; j++ )); do
         temp=$(( j - 1 ))
         [[ $(( ${!j} - ${!temp} )) -ne 1 ]] && {
@@ -144,6 +143,7 @@ add_new_copyright() {
 }
 
 extract_hunks() {
+    local file
     for file in "${diff_updated[@]}" "${diff_added[@]}"; do
         hunks+=("$(
             git diff --output-indicator-new='+' --output-indicator-old='-' \
@@ -158,6 +158,7 @@ extract_hunks() {
 }
 
 extract_diff_headers() {
+    local file
     for file in "${diff_updated[@]}" "${diff_added[@]}"; do
         diff_headers+=("$(
             git diff ${file} |
@@ -167,6 +168,7 @@ extract_diff_headers() {
 }
 
 extract_new_counts() {
+    local hunk
     for hunk in "${hunks[@]}"; do
         new_counts+=("$(
             echo -e "${hunk}" |
@@ -262,6 +264,7 @@ find_preexistent_changes_for_update() {
 }
 
 process_hunks_for_adds() {
+    local hunk revised_hunk
     for hunk in "${hunks[@]:${#diff_updated[*]}}"; do
         revise_hunk_for_add "${hunk}"
     done
@@ -271,6 +274,7 @@ process_hunks_for_adds() {
 }
 
 process_hunks_for_updates() {
+    local hunk revised_hunk
     for hunk in "${hunks[@]::${#diff_updated[*]}}"; do
         revise_hunk_for_update "${hunk}"
     done
@@ -280,6 +284,7 @@ process_hunks_for_updates() {
 }
 
 build_final_hunk_regex() {
+    local -i j
     for (( j=0 ; ${#preexistent_changes[*]} - j ; j+=2 )); do
         [ ${preexistent_changes[j+1]} = 'n' ] && {
             hunk_fix_regex+="${preexistent_changes[j]}d;"
@@ -290,8 +295,7 @@ build_final_hunk_regex() {
 }
 
 create_patches() {
-    local hunk_fix_regex
-    local -a preexistent_changes
+    local hunk_fix_regex ; local -a preexistent_changes ; local -i i
     local -ar PREEXISTENT_CHANGES_ALL=("${preexistent_changes_for_updates[@]}"
         "${preexistent_changes_for_adds[@]}")
     local -ar REVISED_HUNKS_ALL=(
@@ -311,6 +315,7 @@ create_patches() {
 }
 
 apply_updated_copyright_patches() {
+    local -i i
     for (( i=0 ; ${#diff_updated[*]} - i ; i++ )); do
         echo -e "${patches[i]}" |
                 git apply --cached --whitespace=fix - &> /dev/null &&
@@ -320,6 +325,7 @@ apply_updated_copyright_patches() {
 }
 
 apply_new_copyright_patches() {
+    local -i i
     for (( i=0 ; ${#diff_added[*]} - i ; i++ )); do
         echo -e "${patches[@]:${#diff_updated[*]} + i:1}" |
                 git apply --cached --whitespace=fix - &> /dev/null &&
@@ -385,7 +391,7 @@ main() {
     local -a non_text=() unrecognized_text=() no_diff_updated=() diff_added=() \
         no_diff_added=() diff_updated=() diff_failures_updated=() \
         diff_successes_updated=() diff_failures_added=() diff_successes_added=()
-    local -i copyright_line old_year
+    local -i copyright_line old_year i
     local file_type
     for (( i=0; ${#STAGED_FILES[*]} - i; i+=2 )); do
         ! [[ ${STAGED_FILES[i]} =~ R|M|A ]] || {
