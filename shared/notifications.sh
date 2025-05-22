@@ -73,7 +73,7 @@ terminate() {
     case "${FUNCNAME[1]}" in
         'check_binaries')
             error_msg="You must install the following tools "
-            error_msg+="to run this script: $(add_commas $@)\nAborting!"
+            error_msg+="to run this script: ${1}\nAborting!"
         ;;
     esac
     print_message 1 "red" "${error_msg}"
