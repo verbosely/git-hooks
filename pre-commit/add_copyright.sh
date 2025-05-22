@@ -354,24 +354,24 @@ print_results() {
     local msg
     ! (( ${#non_text[*]} )) || {
         msg="The following files aren't of text MIME type "
-        msg+="and were thus skipped: $(add_commas ${non_text[@]})"
+        msg+="and were thus skipped: $(params_to_csv_string ${non_text[@]})"
         print_message 0 "yellow" "${msg}"
     }
     ! (( ${#unrecognized_text[*]} )) || {
-        msg="The following files aren't recognized text files "
-        msg+="and were thus skipped: $(add_commas ${unrecognized_text[@]})"
+        msg="The following files aren't recognized text files and were "
+        msg+="thus skipped: $(params_to_csv_string ${unrecognized_text[@]})"
         print_message 0 "yellow" "${msg}"
     }
     ! (( ${#no_diff_updated[*]} + ${#diff_successes_updated[*]} )) || {
         local -a update=("${no_diff_updated[@]}" "${diff_successes_updated[@]}")
-        msg="Copyrights were updated in the following files "
-        msg+="in the working tree and index: $(add_commas ${update[@]})"
+        msg="Copyrights were updated in the following files in "
+        msg+="the working tree and index: $(params_to_csv_string ${update[@]})"
         print_message 0 "green" "${msg}"
     }
     ! (( ${#no_diff_added[*]} + ${#diff_successes_added[*]} )) || {
         local -a add=("${no_diff_added[@]}" "${diff_successes_added[@]}")
         msg="Copyrights were added to the following files "
-        msg+="in the working tree and index: $(add_commas ${add[@]})"
+        msg+="in the working tree and index: $(params_to_csv_string ${add[@]})"
         print_message 0 "green" "${msg}"
     }
     ! (( ${#diff_failures_added[*]} + ${#diff_failures_updated[*]} )) || {
@@ -379,7 +379,7 @@ print_results() {
             "${diff_failures_updated[@]}")
         msg="Failed to apply patches to the index!\nCopyrights were added "
         msg+="or updated in the following files in the working tree only: "
-        msg+="$(add_commas ${failures[@]})"
+        msg+="$(params_to_csv_string ${failures[@]})"
         print_message 1 "red" "${msg}"
     }
 }
