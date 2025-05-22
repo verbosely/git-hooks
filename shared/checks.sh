@@ -9,7 +9,6 @@ check_binaries() {
     for binary in "${NEEDED_BINARIES[@]}"; do
         which ${binary} &> /dev/null || missing_binaries+=($binary)
     done
-    ! (( ${#missing_binaries[*]} )) ||
-        terminate "$(add_commas ${missing_binaries[@]})"
+    ! (( ${#missing_binaries[*]} )) || terminate "${missing_binaries[@]}"
     unset -f check_binaries
 }
