@@ -1,7 +1,7 @@
 # Copyright © 2025 Verbosely.
 # All rights reserved.
 
-. $(dirname ${BASH_SOURCE[0]})/notifications.sh
+. $(dirname ${BASH_SOURCE[0]})/term_output.sh
 
 check_binaries() {
     local -a missing_binaries=() ; local -ar NEEDED_BINARIES=($*) ; local binary
