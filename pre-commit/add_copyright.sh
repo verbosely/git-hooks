@@ -355,12 +355,12 @@ print_results() {
     ! (( ${#non_text[*]} )) || {
         msg="The following files aren't of text MIME type "
         msg+="and were thus skipped: $(params_to_csv_string ${non_text[@]})"
-        print_message 0 "yellow" "${msg}"
+        print_message 1 "yellow" "${msg}"
     }
     ! (( ${#unrecognized_text[*]} )) || {
         msg="The following files aren't recognized text files and were "
         msg+="thus skipped: $(params_to_csv_string ${unrecognized_text[@]})"
-        print_message 0 "yellow" "${msg}"
+        print_message 1 "yellow" "${msg}"
     }
     ! (( ${#no_diff_updated[*]} + ${#diff_successes_updated[*]} )) || {
         local -a update=("${no_diff_updated[@]}" "${diff_successes_updated[@]}")
